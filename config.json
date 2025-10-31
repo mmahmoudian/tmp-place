@@ -1,3 +1,12 @@
 {
-  "max_file_size": 10485760  // limit in bytes, here set to 10MB
+  "server":{
+    "host": "localhost",
+    "port": 8080,
+    "log_level": "info"
+  },
+  "uploads": {
+    "path": "./uploads",
+    "max_file_size": 10485760,
+    "max_ttl_seconds": 43200
+  }
 }

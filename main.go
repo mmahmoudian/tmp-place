@@ -9,10 +9,10 @@ import (
 	"tmp-place/helpers"
 )
 
-func handler(cfg Config) http.HandlerFunc {
+func handler(cfg helpers.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		r.Body = http.MaxBytesReader(w, r.Body, cfg.MaxFileSize)
-		err := r.ParseMultipartForm(cfg.MaxFileSize)
+		r.Body = http.MaxBytesReader(w, r.Body, cfg.Uploads.MaxFileSize)
+		err := r.ParseMultipartForm(cfg.Uploads.MaxFileSize)
 		if err != nil {
 			http.Error(w, "File too large", http.StatusRequestEntityTooLarge)
 			return
@@ -47,12 +47,15 @@ func handler(cfg Config) http.HandlerFunc {
 }
 
 func main() {
-	cfg, err := LoadConfig("config.json")
+	// Load configuration
+	cfg, err := helpers.LoadConfig("config.json")
 	if err != nil {
 		fmt.Println("Error loading config:", err)
-		return
+		os.Exit(1)
 	}
+
+	// Set up HTTP server
 	http.HandleFunc("/", handler(cfg))
-	fmt.Println("Starting server at :8080")
-	http.ListenAndServe(":8080", nil)
+	fmt.Println("Starting server at :", cfg.Server.Port)
+	http.ListenAndServe(fmt.Sprintf(":%d", cfg.Server.Port), nil)
 }
