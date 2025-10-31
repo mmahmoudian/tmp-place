@@ -32,16 +32,21 @@ func handler(cfg helpers.Config) http.HandlerFunc {
 		// Handle Download Secret
 		DownloadSecret := r.FormValue("secret")
 
+		// sanitize and prepare the secret input
+		DownloadSecret = helpers.PrepareSecret(DownloadSecret)
+
 		// Handle File Upload
 		file, handler, err := r.FormFile("file")
 		if err == nil {
 			defer file.Close()
+
 			// get the original filename
 			originalFilename := handler.Filename
+
 			// create a new filename with a random tag
 			taggedFilename := fmt.Sprint(helpers.GenerateRandomTag())
-			// save the file to disk using the tagged filename
 
+			// save the file to disk using the tagged filename
 			dst, err := os.Create(fmt.Sprintf("%s/%s", cfg.Uploads.Path, taggedFilename))
 			if err != nil {
 				http.Error(w, "Unable to save the file", http.StatusInternalServerError)

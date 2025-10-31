@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -20,4 +21,32 @@ func GenerateRandomTag(length ...int) string {
 		b[i] = charset[seededRand.Intn(len(charset))]
 	}
 	return string(b)
+}
+
+// SanitizeInput removes leading and trailing whitespace from the input string.
+// Only allows safe characters for sql (alphanumeric and some special characters)
+// and returns the sanitized string.
+func SanitizeInput(input string) string {
+	// Remove leading and trailing whitespace
+	input = strings.TrimSpace(input)
+
+	// Allow only safe characters (alphanumeric and some special characters)
+	var safeChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_."
+	for _, char := range input {
+		if !strings.ContainsRune(safeChars, char) {
+			input = strings.ReplaceAll(input, string(char), "")
+		}
+	}
+	return input
+}
+
+// PrepareSecret sanitizes and truncates the secret to a maximum length of 42 characters.
+// It uses SanitizeInput to clean the input string and then truncates it if necessary.
+// Returns the prepared secret string.
+func PrepareSecret(secret string) string {
+	sanitized := SanitizeInput(secret)
+	if len(sanitized) > 42 {
+		sanitized = sanitized[:42]
+	}
+	return sanitized
 }
