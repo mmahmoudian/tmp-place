@@ -32,7 +32,8 @@ func handler(cfg helpers.Config) http.HandlerFunc {
 			// create a new filename with a random tag
 			taggedFilename := fmt.Sprintf("%s_%s", helpers.GenerateRandomTag(), originalFilename)
 			// save the file to disk using the tagged filename
-			dst, err := os.Create(taggedFilename)
+
+			dst, err := os.Create(fmt.Sprintf("%s/%s", cfg.Uploads.Path, taggedFilename))
 			if err != nil {
 				http.Error(w, "Unable to save the file", http.StatusInternalServerError)
 				return
@@ -51,6 +52,13 @@ func main() {
 	cfg, err := helpers.LoadConfig("config.json")
 	if err != nil {
 		fmt.Println("Error loading config:", err)
+		os.Exit(1)
+	}
+
+	// Ensure upload directory exists
+	err = os.MkdirAll(cfg.Uploads.Path, os.ModePerm)
+	if err != nil {
+		fmt.Println("Error creating upload directory:", err)
 		os.Exit(1)
 	}
 
