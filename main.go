@@ -3,30 +3,11 @@ package main
 import (
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"os"
-	"time"
 
 	"tmp-place/helpers"
 )
-
-// GenerateRandomString returns a random alphanumeric string of the given length.
-// If length is zero, it defaults to 6.
-// The generated string includes uppercase letters, lowercase letters, and digits.
-func GenerateRandomString(length ...int) string {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	n := 6
-	if len(length) > 0 {
-		n = length[0]
-	}
-	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = charset[seededRand.Intn(len(charset))]
-	}
-	return string(b)
-}
 
 func handler(cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +30,7 @@ func handler(cfg Config) http.HandlerFunc {
 			// get the original filename
 			originalFilename := handler.Filename
 			// create a new filename with a random tag
-			taggedFilename := fmt.Sprintf("%s_%s", GenerateRandomString(), originalFilename)
+			taggedFilename := fmt.Sprintf("%s_%s", helpers.GenerateRandomTag(), originalFilename)
 			// save the file to disk using the tagged filename
 			dst, err := os.Create(taggedFilename)
 			if err != nil {
