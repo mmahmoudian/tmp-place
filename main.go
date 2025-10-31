@@ -29,6 +29,10 @@ func handler(cfg helpers.Config) http.HandlerFunc {
 			}
 		}
 
+		// Handle Download Secret
+		DownloadSecret := r.FormValue("secret")
+
+		// Handle File Upload
 		file, handler, err := r.FormFile("file")
 		if err == nil {
 			defer file.Close()
