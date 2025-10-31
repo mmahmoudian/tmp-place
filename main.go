@@ -35,7 +35,7 @@ func handler(cfg helpers.Config) http.HandlerFunc {
 			// get the original filename
 			originalFilename := handler.Filename
 			// create a new filename with a random tag
-			taggedFilename := fmt.Sprintf("%s_%s", helpers.GenerateRandomTag(), originalFilename)
+			taggedFilename := fmt.Sprint(helpers.GenerateRandomTag())
 			// save the file to disk using the tagged filename
 
 			dst, err := os.Create(fmt.Sprintf("%s/%s", cfg.Uploads.Path, taggedFilename))
