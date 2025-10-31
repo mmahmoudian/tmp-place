@@ -214,3 +214,111 @@ func TestConvertToSeconds(t *testing.T) {
 		})
 	}
 }
+
+func TestSecondsToHumanReadable(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    int64
+		expected string
+	}{
+		{
+			name:     "0 seconds",
+			input:    0,
+			expected: "0 Days, 0 Hours, 0 Minutes, and 0 Seconds",
+		},
+		{
+			name:     "1 second",
+			input:    1,
+			expected: "0 Days, 0 Hours, 0 Minutes, and 1 Seconds",
+		},
+		{
+			name:     "59 seconds",
+			input:    59,
+			expected: "0 Days, 0 Hours, 0 Minutes, and 59 Seconds",
+		},
+		{
+			name:     "1 minute (60 seconds)",
+			input:    60,
+			expected: "0 Days, 0 Hours, 1 Minutes, and 0 Seconds",
+		},
+		{
+			name:     "1 minute 30 seconds",
+			input:    90,
+			expected: "0 Days, 0 Hours, 1 Minutes, and 30 Seconds",
+		},
+		{
+			name:     "10 minutes",
+			input:    600,
+			expected: "0 Days, 0 Hours, 10 Minutes, and 0 Seconds",
+		},
+		{
+			name:     "1 hour",
+			input:    3600,
+			expected: "0 Days, 1 Hours, 0 Minutes, and 0 Seconds",
+		},
+		{
+			name:     "1 hour 1 second",
+			input:    3601,
+			expected: "0 Days, 1 Hours, 0 Minutes, and 1 Seconds",
+		},
+		{
+			name:     "1 hour 1 minute 1 second",
+			input:    3661,
+			expected: "0 Days, 1 Hours, 1 Minutes, and 1 Seconds",
+		},
+		{
+			name:     "2 hours 30 minutes 45 seconds",
+			input:    9045,
+			expected: "0 Days, 2 Hours, 30 Minutes, and 45 Seconds",
+		},
+		{
+			name:     "23 hours 59 minutes 59 seconds",
+			input:    86399,
+			expected: "0 Days, 23 Hours, 59 Minutes, and 59 Seconds",
+		},
+		{
+			name:     "1 day (86400 seconds)",
+			input:    86400,
+			expected: "1 Days, 0 Hours, 0 Minutes, and 0 Seconds",
+		},
+		{
+			name:     "1 day 1 hour 1 minute 1 second",
+			input:    90061,
+			expected: "1 Days, 1 Hours, 1 Minutes, and 1 Seconds",
+		},
+		{
+			name:     "2 days",
+			input:    172800,
+			expected: "2 Days, 0 Hours, 0 Minutes, and 0 Seconds",
+		},
+		{
+			name:     "7 days",
+			input:    604800,
+			expected: "7 Days, 0 Hours, 0 Minutes, and 0 Seconds",
+		},
+		{
+			name:     "7 days 12 hours 30 minutes 15 seconds",
+			input:    649815,
+			expected: "7 Days, 12 Hours, 30 Minutes, and 15 Seconds",
+		},
+		{
+			name:     "30 days",
+			input:    2592000,
+			expected: "30 Days, 0 Hours, 0 Minutes, and 0 Seconds",
+		},
+		{
+			name:     "365 days",
+			input:    31536000,
+			expected: "365 Days, 0 Hours, 0 Minutes, and 0 Seconds",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := SecondsToHumanReadable(tt.input)
+			if result != tt.expected {
+				t.Errorf("SecondsToHumanReadable(%d) = %q, expected %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}

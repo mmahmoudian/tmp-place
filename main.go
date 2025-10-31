@@ -18,11 +18,16 @@ func handler(cfg helpers.Config) http.HandlerFunc {
 			return
 		}
 
-		name := r.FormValue("name")
-		if name == "" {
-			name = "stranger"
+		// Handle TTL
+		ttlInSeconds := cfg.Uploads.MaxTTLSeconds
+		ttl := r.FormValue("ttl")
+		if ttl != "" {
+			ttlInSeconds, err = helpers.ConvertToSeconds(ttl)
+			if err != nil {
+				http.Error(w, "Invalid TTL format. Please use a valid duration (e.g., 10s, 5m, 1h)", http.StatusBadRequest)
+				return
+			}
 		}
-		fmt.Fprintf(w, "Hello, %s!\n", name)
 
 		file, handler, err := r.FormFile("file")
 		if err == nil {

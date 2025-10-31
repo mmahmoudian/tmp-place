@@ -87,3 +87,19 @@ func ConvertToSeconds(timeStr string) (int64, error) {
 	}
 	return seconds, nil
 }
+
+// SecondsToHumanReadable converts seconds to a human-readable format.
+// Returns a string in the format "%d Days, %d Hours, %d Minutes, and %d Seconds"
+func SecondsToHumanReadable(totalSeconds int64) string {
+	days := totalSeconds / 86400
+	remainingAfterDays := totalSeconds % 86400
+
+	hours := remainingAfterDays / 3600
+	remainingAfterHours := remainingAfterDays % 3600
+
+	minutes := remainingAfterHours / 60
+	seconds := remainingAfterHours % 60
+
+	return fmt.Sprintf("%d Days, %d Hours, %d Minutes, and %d Seconds",
+		days, hours, minutes, seconds)
+}
