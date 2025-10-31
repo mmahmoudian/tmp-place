@@ -49,7 +49,18 @@ func handler(cfg helpers.Config) http.HandlerFunc {
 			}
 			defer dst.Close()
 			io.Copy(dst, file)
+
+			// inform the user about the upload and download details
 			fmt.Fprintf(w, "File %s uploaded successfully.\n", originalFilename)
+			fmt.Fprintf(w, "TTL set to %s.\n", helpers.SecondsToHumanReadable(ttlInSeconds))
+			fmt.Fprintf(w, "Download secret is: %s\n", DownloadSecret)
+			if DownloadSecret != "" {
+				fmt.Fprintf(w, "Use the secret to download your file securely.\n")
+				fmt.Fprintf(w, "Download link: %s/%s?secret=%s\n", cfg.Server.Host, taggedFilename, DownloadSecret)
+			} else {
+				fmt.Fprintf(w, "No secret was provided. The file will be publicly accessible.\n")
+				fmt.Fprintf(w, "Download link: %s/%s\n", cfg.Server.Host, taggedFilename)
+			}
 		} else {
 			fmt.Fprintf(w, "No file uploaded.\n")
 		}
