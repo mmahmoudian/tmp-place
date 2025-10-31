@@ -1,22 +1,24 @@
 package main
 
 import (
-    "fmt"
-    "io"
-    "net/http"
-    "os"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
     // Limit maximum upload size to 10MB
     r.ParseMultipartForm(10 << 20)
 
-    // Get the 'name' field
-    name := r.FormValue("name")
-    if name == "" {
-        name = "stranger"
-    }
-    fmt.Fprintf(w, "Hello, %s!\n", name)
+func handler(cfg Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, cfg.MaxFileSize)
+		err := r.ParseMultipartForm(cfg.MaxFileSize)
+		if err != nil {
+			http.Error(w, "File too large", http.StatusRequestEntityTooLarge)
+			return
+		}
 
     // Get the uploaded file
     file, handler, err := r.FormFile("file")
@@ -37,7 +39,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-    http.HandleFunc("/", handler)
-    fmt.Println("Starting server at :8080")
-    http.ListenAndServe(":8080", nil)
+	cfg, err := LoadConfig("config.json")
+	if err != nil {
+		fmt.Println("Error loading config:", err)
+		return
+	}
+	http.HandleFunc("/", handler(cfg))
+	fmt.Println("Starting server at :8080")
+	http.ListenAndServe(":8080", nil)
 }
