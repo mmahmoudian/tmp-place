@@ -1,8 +1,7 @@
 package admin
 
 import (
-	"fmt"
-
+	"github.com/mmahmoudian/tmp-place/cmd/shared"
 	"github.com/spf13/cobra"
 )
 
@@ -10,5 +9,5 @@ import (
 func AdminHandler(cmd *cobra.Command, args []string) {
 	// Implementation for admin tasks
 
-	fmt.Println("The admin handler is not yet implemented.")
+	shared.Msg("info", "The admin handler is not yet implemented.")
 }

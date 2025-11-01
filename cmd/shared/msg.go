@@ -13,7 +13,7 @@ func Msg(color string, message string, args ...any) {
 		"error":   "\033[41;97m ⛌ \033[0;31m ", // red
 		"success": "\033[42;97m ✓ \033[0;32m ", // green
 		"warning": "\033[43;97m ⚠ \033[0;33m ", // yellow
-		"output":  "\033[44;97m 🛈 \033[0;34m ", // blue
+		"info":    "\033[44;97m ℹ \033[0;34m ", // blue
 
 		"red":     "\033[31m",
 		"green":   "\033[32m",

@@ -1,8 +1,7 @@
 package janitor
 
 import (
-	"fmt"
-
+	"github.com/mmahmoudian/tmp-place/cmd/shared"
 	"github.com/spf13/cobra"
 )
 
@@ -10,5 +9,5 @@ import (
 func JanitorHandler(cmd *cobra.Command, args []string) {
 	// Implementation for janitor tasks
 
-	fmt.Println("The janitor handler is not yet implemented.")
+	shared.Msg("info", "The janitor handler is not yet implemented.")
 }
