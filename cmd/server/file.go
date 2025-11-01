@@ -6,7 +6,7 @@ import (
 	"mime/multipart"
 	"os"
 
-	"github.com/mmahmoudian/tmp-place/internals/shared"
+	"github.com/mmahmoudian/tmp-place/cmd/shared"
 )
 
 type FileInfo struct {
@@ -27,6 +27,7 @@ func ReceiveFile(file multipart.File, handler *multipart.FileHeader, cfg shared.
 	originalFilename := handler.Filename
 
 	// create a new filename with a random tag
+	// TODO: ensure the generated TaggedFilename is not already in use, otherwise regenerate a new one
 	TaggedFilename := fmt.Sprint(GenerateRandomTag())
 
 	// save the file to disk using the tagged filename

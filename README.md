@@ -99,13 +99,15 @@ wget 'http://domain.tld/n2eu0B?secret=VeryStringPassword'
 --------------------------------------------------------------------------------
 
 ## Project structure
-This project will have three binary files:
-1. `server` which handles the http requests for upload and download
-2. `cleaner` which clean up the files based on TTL and other factors, and updates the database
-3. `admin` which comes with some administrations tools
+This project will produce one binary file with four subcommands for each of the modules of this software:
+1. `setup` to provide a step-by-step and guided wizard to setup the project on server
+2. `server` to start the webserver
+3. `admin` to provide administrative functionality to the admin
+4. `janitor` which clean up the files based on TTL and other factors, and updates the database
 
-The source code for these are under their respective folders in `cmd/`. Each of these files can have their own modules which are under their respective names under `internals/`, and there is also a shared module which is used by multiple of them and can be found under `internals/shared/`
-The filenames in the `internals/` are based on their general criteria (e.g., `file.go`, `time.go`) and each file can contain more than one function. The test units for the module functions are in files that have the same name but suffixed with `_test.go`.
+The main file is `main.go` in the root of the project which decides what module should be called based on the subcommand. For each of the subcommands there is a dedicated folder under `cmd/` that contains the functions used by that module. There is a `main.go` file in each of the module-specific folder (i.e., `cmd/*/main.go`) that contains the main functions of that module. Treat them as entry points of each module. There is also an additional `cmd/shared/` which contains functions that are used by more than one module, such as reading config and etc. Every file in `cmd/` is named after the general functionality of the functions inside that file (e.g., `file.go` for handling files, `time.go` for handling time conversion and etc).
+
+For every file under the `cmd/`, there is a file with same name but suffixed with `_test.go` which contains the test units for functions in their respective files.
 
 --------------------------------------------------------------------------------
 
@@ -113,6 +115,7 @@ The filenames in the `internals/` are based on their general criteria (e.g., `fi
 - [x] implement file upload from the user
 - [x] generate 6 character file tag
 - [x] allow the user to specify the secret that should be provided during the download
+- [x] change to single app with subcommands
 - [ ] store the data in a sqlite database
 - [ ] implement file download
 - [ ] delete the file if it had the one-off flag

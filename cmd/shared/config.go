@@ -13,7 +13,9 @@ type Config struct {
 
 // ServerConfig contains server-related configuration
 type ServerConfig struct {
-	Host     string         `json:"host"`
+	// name or address of the server
+	Host string `json:"host"`
+	// port number for the server
 	Port     int            `json:"port"`
 	Database DatabaseConfig `json:"database"`
 	Logging  LoggingConfig  `json:"logging"`
@@ -21,20 +23,26 @@ type ServerConfig struct {
 
 // DatabaseConfig contains database-related configuration
 type DatabaseConfig struct {
+	// path to the database file
 	DatabaseFile string `json:"database_file"`
 }
 
 // LoggingConfig contains logging-related configuration
 type LoggingConfig struct {
-	LogFile  string `json:"log_file"`
+	// path to the log file
+	LogFile string `json:"log_file"`
+	// logging level (e.g., debug, info, warn, error)
 	LogLevel string `json:"log_level"`
 }
 
 // UploadsConfig contains upload-related configuration
 type UploadsConfig struct {
-	Path          string `json:"path"`
-	MaxFileSize   int64  `json:"max_file_size"`
-	MaxTTLSeconds int64  `json:"max_ttl_seconds"`
+	// path to the upload directory
+	Path string `json:"path"`
+	// maximum allowed file size for uploads in bytes
+	MaxFileSize int64 `json:"max_file_size"`
+	// maximum TTL (time-to-live) for uploaded files in seconds
+	MaxTTLSeconds int64 `json:"max_ttl_seconds"`
 }
 
 // LoadConfig loads configuration from a JSON file.
@@ -49,4 +57,20 @@ func LoadConfig(filename string) (Config, error) {
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&cfg)
 	return cfg, err
+}
+
+// SaveConfig saves the given configuration to a JSON file.
+// It writes the file with read/write permissions for the owner (0644).
+func SaveConfig(filename string, cfg Config) error {
+	// marshal with indentation for readability
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return err
+	}
+	// write atomically: write to temp file then rename (best-effort)
+	tmp := filename + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o644); err != nil {
+		return err
+	}
+	return os.Rename(tmp, filename)
 }
