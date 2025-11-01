@@ -2,7 +2,13 @@
   "server":{
     "host": "localhost",
     "port": 8080,
-    "log_level": "info"
+    "database": {
+      "database_file": "./tmp_place.db"
+    },
+    "logging": {
+      "log_file": "./tmp_place.log",
+      "log_level": "info"
+    }
   },
   "uploads": {
     "path": "./uploads",

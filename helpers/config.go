@@ -13,8 +13,20 @@ type Config struct {
 
 // ServerConfig contains server-related configuration
 type ServerConfig struct {
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
+	Host     string         `json:"host"`
+	Port     int            `json:"port"`
+	Database DatabaseConfig `json:"database"`
+	Logging  LoggingConfig  `json:"logging"`
+}
+
+// DatabaseConfig contains database-related configuration
+type DatabaseConfig struct {
+	DatabaseFile string `json:"database_file"`
+}
+
+// LoggingConfig contains logging-related configuration
+type LoggingConfig struct {
+	LogFile  string `json:"log_file"`
 	LogLevel string `json:"log_level"`
 }
 
@@ -25,6 +37,8 @@ type UploadsConfig struct {
 	MaxTTLSeconds int64  `json:"max_ttl_seconds"`
 }
 
+// LoadConfig loads configuration from a JSON file.
+// It returns a Config struct and any error encountered.
 func LoadConfig(filename string) (Config, error) {
 	var cfg Config
 	file, err := os.Open(filename)
