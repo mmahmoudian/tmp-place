@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 
@@ -35,36 +34,36 @@ func handler(cfg helpers.Config) http.HandlerFunc {
 		// sanitize and prepare the secret input
 		DownloadSecret = helpers.PrepareSecret(DownloadSecret)
 
-		// Handle File Upload
+		// Handle file argument
 		file, handler, err := r.FormFile("file")
 		if err == nil {
 			defer file.Close()
 
-			// get the original filename
-			originalFilename := handler.Filename
-
-			// create a new filename with a random tag
-			taggedFilename := fmt.Sprint(helpers.GenerateRandomTag())
-
-			// save the file to disk using the tagged filename
-			dst, err := os.Create(fmt.Sprintf("%s/%s", cfg.Uploads.Path, taggedFilename))
+			// Handle File Upload
+			FileInfo, err := helpers.ReceiveFile(file, handler, cfg)
 			if err != nil {
 				http.Error(w, "Unable to save the file", http.StatusInternalServerError)
 				return
 			}
-			defer dst.Close()
-			io.Copy(dst, file)
+
+			// add the DownloadSecret and TTL to FileInfo
+			FileInfo.DownloadSecret = DownloadSecret
+			FileInfo.TTLInSeconds = ttlInSeconds
+
+			if err != nil {
+				return
+			}
 
 			// inform the user about the upload and download details
-			fmt.Fprintf(w, "File %s uploaded successfully.\n", originalFilename)
+			fmt.Fprintf(w, "File %s uploaded successfully.\n", FileInfo.OriginalFilename)
 			fmt.Fprintf(w, "TTL set to %s.\n", helpers.SecondsToHumanReadable(ttlInSeconds))
 			fmt.Fprintf(w, "Download secret is: %s\n", DownloadSecret)
 			if DownloadSecret != "" {
 				fmt.Fprintf(w, "Use the secret to download your file securely.\n")
-				fmt.Fprintf(w, "Download link: %s/%s?secret=%s\n", cfg.Server.Host, taggedFilename, DownloadSecret)
+				fmt.Fprintf(w, "Download link: %s/%s?secret=%s\n", cfg.Server.Host, FileInfo.TaggedFilename, DownloadSecret)
 			} else {
 				fmt.Fprintf(w, "No secret was provided. The file will be publicly accessible.\n")
-				fmt.Fprintf(w, "Download link: %s/%s\n", cfg.Server.Host, taggedFilename)
+				fmt.Fprintf(w, "Download link: %s/%s\n", cfg.Server.Host, FileInfo.TaggedFilename)
 			}
 		} else {
 			fmt.Fprintf(w, "No file uploaded.\n")
