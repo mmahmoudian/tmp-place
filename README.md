@@ -1,6 +1,6 @@
 # tmp-place
 
-> [!WARNING]  
+> [!WARNING]
 > This software is in very early stages. Read the code and contribute if you like, but this is definitely not ready in any shape or form to be deployed.
 
 The idea is to have a small project written in one language that can be used for upload/download files that live for short-term. Something generally akin to 0x0.st (https://git.0x0.st/mia/0x0) but with some modifications.
@@ -99,7 +99,13 @@ wget 'http://domain.tld/n2eu0B?secret=VeryStringPassword'
 --------------------------------------------------------------------------------
 
 ## Project structure
-The main program is in `main.go`, and there are helper functions that are stored in the `helpres/` directory. The filenames in the `helpres/` is based on their general function and each file can contain more than one function. The test units for the helper functions are named like `helpres/*_test.go`.
+This project will have three binary files:
+1. `server` which handles the http requests for upload and download
+2. `cleaner` which clean up the files based on TTL and other factors, and updates the database
+3. `admin` which comes with some administrations tools
+
+The source code for these are under their respective folders in `cmd/`. Each of these files can have their own modules which are under their respective names under `internals/`, and there is also a shared module which is used by multiple of them and can be found under `internals/shared/`
+The filenames in the `internals/` are based on their general criteria (e.g., `file.go`, `time.go`) and each file can contain more than one function. The test units for the module functions are in files that have the same name but suffixed with `_test.go`.
 
 --------------------------------------------------------------------------------
 
