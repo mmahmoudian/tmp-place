@@ -2,12 +2,35 @@ package setup
 
 import (
 	"database/sql"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
 	_ "modernc.org/sqlite"
 )
+
+// findSchema locates db_schema.sql by walking up from the given directory.
+// TODO: I'm not sure if such function is necessary. I'll keep it for now
+// in case I restructure the project and to prevent from this test failing
+// for now.
+func findSchema(startDir string) ([]byte, error) {
+	dir := startDir
+	// search up to 3 levels
+	for i := 0; i < 3; i++ {
+		candidate := filepath.Join(dir, "db_schema.sql")
+		if b, err := os.ReadFile(candidate); err == nil {
+			return b, nil
+		}
+		parent := filepath.Dir(dir)
+		// reached filesystem root
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+	return nil, errors.New("db_schema.sql not found by walking up directories")
+}
 
 func TestCreateDatabase_Success(t *testing.T) {
 	dir := t.TempDir()
@@ -25,8 +48,8 @@ func TestCreateDatabase_Success(t *testing.T) {
 		}
 	}()
 
-	// Copy db_schema.sql to temp dir
-	schemaContent, err := os.ReadFile(filepath.Join(origDir, "db_schema.sql"))
+	// Copy db_schema.sql to temp dir (locate it by walking up from the package dir)
+	schemaContent, err := findSchema(origDir)
 	if err != nil {
 		t.Fatalf("failed to read db_schema.sql: %v", err)
 	}
@@ -135,8 +158,8 @@ func TestCreateDatabase_CreatesParentDirectory(t *testing.T) {
 		}
 	}()
 
-	// Copy db_schema.sql to temp dir
-	schemaContent, err := os.ReadFile(filepath.Join(origDir, "db_schema.sql"))
+	// Copy db_schema.sql to temp dir (locate it by walking up from the package dir)
+	schemaContent, err := findSchema(origDir)
 	if err != nil {
 		t.Fatalf("failed to read db_schema.sql: %v", err)
 	}
