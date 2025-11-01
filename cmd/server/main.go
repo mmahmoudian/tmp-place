@@ -8,6 +8,18 @@ import (
 	"tmp-place/helpers"
 )
 
+// AddFileToDB is a helper function to store file data in the database.
+// It returns any error encountered.
+func AddFileToDB(FileInfo helpers.FileInfo, cfg helpers.Config) error {
+	// Implementation for adding file metadata to the database
+	_, err := helpers.GetFileMetadata(FileInfo.TaggedFilename, cfg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func handler(cfg helpers.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, cfg.Uploads.MaxFileSize)
@@ -51,7 +63,10 @@ func handler(cfg helpers.Config) http.HandlerFunc {
 			FileInfo.DownloadSecret = DownloadSecret
 			FileInfo.TTLInSeconds = ttlInSeconds
 
+			// inform the database about the new file
+			err = AddFileToDB(FileInfo, cfg)
 			if err != nil {
+				http.Error(w, "Unable to save file metadata", http.StatusInternalServerError)
 				return
 			}
 
