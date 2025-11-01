@@ -30,9 +30,10 @@ func handler(cfg helpers.Config) http.HandlerFunc {
 
 		// Handle Download Secret
 		DownloadSecret := r.FormValue("secret")
-
-		// sanitize and prepare the secret input
-		DownloadSecret = helpers.PrepareSecret(DownloadSecret)
+		if DownloadSecret != "" {
+			// sanitize and prepare the secret input
+			DownloadSecret = helpers.PrepareSecret(DownloadSecret)
+		}
 
 		// Handle file argument
 		file, handler, err := r.FormFile("file")
