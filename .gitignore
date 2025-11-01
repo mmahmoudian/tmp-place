@@ -18,7 +18,7 @@ coverage.*
 profile.cov
 
 # Built file
-main
+bin/
 
 # Dependency directories (remove the comment below to include it)
 # vendor/

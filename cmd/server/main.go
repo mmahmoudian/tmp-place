@@ -5,14 +5,15 @@ import (
 	"net/http"
 	"os"
 
-	"tmp-place/helpers"
+	"github.com/mmahmoudian/tmp-place/internals/server"
+	"github.com/mmahmoudian/tmp-place/internals/shared"
 )
 
 // AddFileToDB is a helper function to store file data in the database.
 // It returns any error encountered.
-func AddFileToDB(FileInfo helpers.FileInfo, cfg helpers.Config) error {
+func AddFileToDB(FileInfo server.FileInfo, cfg shared.Config) error {
 	// Implementation for adding file metadata to the database
-	_, err := helpers.GetFileMetadata(FileInfo.TaggedFilename, cfg)
+	_, err := server.GetFileMetadata(FileInfo.TaggedFilename, cfg)
 	if err != nil {
 		return err
 	}
@@ -20,7 +21,7 @@ func AddFileToDB(FileInfo helpers.FileInfo, cfg helpers.Config) error {
 	return nil
 }
 
-func handler(cfg helpers.Config) http.HandlerFunc {
+func handler(cfg shared.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, cfg.Uploads.MaxFileSize)
 		err := r.ParseMultipartForm(cfg.Uploads.MaxFileSize)
@@ -33,7 +34,7 @@ func handler(cfg helpers.Config) http.HandlerFunc {
 		ttlInSeconds := cfg.Uploads.MaxTTLSeconds
 		ttl := r.FormValue("ttl")
 		if ttl != "" {
-			ttlInSeconds, err = helpers.ConvertToSeconds(ttl)
+			ttlInSeconds, err = server.ConvertToSeconds(ttl)
 			if err != nil {
 				http.Error(w, "Invalid TTL format. Please use a valid duration (e.g., 10s, 5m, 1h)", http.StatusBadRequest)
 				return
@@ -44,7 +45,7 @@ func handler(cfg helpers.Config) http.HandlerFunc {
 		DownloadSecret := r.FormValue("secret")
 		if DownloadSecret != "" {
 			// sanitize and prepare the secret input
-			DownloadSecret = helpers.PrepareSecret(DownloadSecret)
+			DownloadSecret = server.PrepareSecret(DownloadSecret)
 		}
 
 		// Handle file argument
@@ -53,7 +54,7 @@ func handler(cfg helpers.Config) http.HandlerFunc {
 			defer file.Close()
 
 			// Handle File Upload
-			FileInfo, err := helpers.ReceiveFile(file, handler, cfg)
+			FileInfo, err := server.ReceiveFile(file, handler, cfg)
 			if err != nil {
 				http.Error(w, "Unable to save the file", http.StatusInternalServerError)
 				return
@@ -72,7 +73,7 @@ func handler(cfg helpers.Config) http.HandlerFunc {
 
 			// inform the user about the upload and download details
 			fmt.Fprintf(w, "File %s uploaded successfully.\n", FileInfo.OriginalFilename)
-			fmt.Fprintf(w, "TTL set to %s.\n", helpers.SecondsToHumanReadable(ttlInSeconds))
+			fmt.Fprintf(w, "TTL set to %s.\n", server.SecondsToHumanReadable(ttlInSeconds))
 			fmt.Fprintf(w, "Download secret is: %s\n", DownloadSecret)
 			if DownloadSecret != "" {
 				fmt.Fprintf(w, "Use the secret to download your file securely.\n")
@@ -89,7 +90,7 @@ func handler(cfg helpers.Config) http.HandlerFunc {
 
 func main() {
 	// Load configuration
-	cfg, err := helpers.LoadConfig("config.json")
+	cfg, err := shared.LoadConfig("config.json")
 	if err != nil {
 		fmt.Println("Error loading config:", err)
 		os.Exit(1)
