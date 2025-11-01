@@ -7,6 +7,13 @@ import (
 
 // Msg prints a formatted message to the console.
 func Msg(color string, message string, args ...any) {
+	// Check if stdout is piped, if so, do not print colors
+	if isStdoutPiped() {
+		// When output is piped, do not print colors
+		fmt.Println(message, fmt.Sprint(args...))
+		return
+	}
+
 	const reset = "\033[0m"
 	var colors = map[string]string{
 		// very nice explanation here: https://stackoverflow.com/a/33206814/1613005
@@ -25,6 +32,7 @@ func Msg(color string, message string, args ...any) {
 		"white":   "\033[97m",
 	}
 
+	// check if color is valid
 	if code, ok := colors[strings.ToLower(color)]; ok {
 		// fmt.Println(code + fmt.Sprint(message, args) + reset)
 		fmt.Println(code + message + fmt.Sprint(args...) + reset)
