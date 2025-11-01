@@ -47,7 +47,7 @@ func setupConfigWizard() (shared.Config, error) {
 			}
 			n, err := strconv.Atoi(s)
 			if err != nil {
-				fmt.Println("Please enter a valid integer.")
+				shared.Msg("error", "Please enter a valid integer.")
 				continue
 			}
 			return n, nil
@@ -69,7 +69,7 @@ func setupConfigWizard() (shared.Config, error) {
 			}
 			n, err := strconv.ParseInt(s, 10, 64)
 			if err != nil {
-				fmt.Println("Please enter a valid integer.")
+				shared.Msg("error", "Please enter a valid integer.")
 				continue
 			}
 			return n, nil
@@ -175,7 +175,7 @@ func setupConfigWizard() (shared.Config, error) {
 		return shared.Config{}, fmt.Errorf("failed to save config: %w", err)
 	}
 
-	fmt.Println("Configuration saved to config.json.")
+	shared.Msg("success", "Configuration saved to config.json.")
 	return cfg, nil
 }
 
@@ -187,9 +187,9 @@ func setupUploadDirectory(path string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println("Upload directory created at:", path)
+		shared.Msg("success", "Upload directory created at:", path)
 	} else {
-		fmt.Println("Upload directory already exists at:", path)
+		shared.Msg("warning", "Upload directory already exists at:", path)
 	}
 	return nil
 }
@@ -207,26 +207,26 @@ func SetupHandler(cmd *cobra.Command, args []string) {
 		}
 		fmt.Println("Starting config creation wizard...")
 		if _, err := setupConfigWizard(); err != nil {
-			fmt.Println("Error during setup:", err)
+			shared.Msg("error", "Error during setup:", err)
 			os.Exit(1)
 		}
 
 		// since we had to create the config, setup is not already done
 		alreadyDone = false
 	} else {
-		fmt.Println("Config file found.")
+		shared.Msg("success", "Config file found")
 	}
 
 	// Load configuration
 	cfg, err := shared.LoadConfig("config.json")
 	if err != nil {
-		fmt.Println("Error loading config:", err)
+		shared.Msg("error", "Error loading config:", err)
 		os.Exit(1)
 	}
 
 	// check if database file exists
 	if _, err := os.Stat(cfg.Server.Database.DatabaseFile); os.IsNotExist(err) {
-		fmt.Println("Database file not found at:", cfg.Server.Database.DatabaseFile)
+		shared.Msg("warning", "Database file not found at:", cfg.Server.Database.DatabaseFile)
 
 		// ask user if they want to create the database file
 		if shared.AskYesNo("Would you like to create the database file now?") {
@@ -234,42 +234,42 @@ func SetupHandler(cmd *cobra.Command, args []string) {
 			if err := CreateDatabase(cfg.Server.Database.DatabaseFile); err != nil {
 				os.Exit(1)
 			}
-			fmt.Println("Database file created at:", cfg.Server.Database.DatabaseFile)
+			shared.Msg("success", "Database file created at:", cfg.Server.Database.DatabaseFile)
 		} else {
-			fmt.Println("Database file creation skipped. Please create it manually using the 'db_schema.sql' file.")
+			shared.Msg("warning", "Database file creation skipped. Please create it manually using the 'db_schema.sql' file.")
 			os.Exit(1)
 		}
 
 		// since we had to create the config, setup is not already done
 		alreadyDone = false
 	} else {
-		fmt.Println("Database file found.")
+		shared.Msg("success", "Database file found")
 	}
 
 	// check if upload directory exists
 	if _, err := os.Stat(cfg.Uploads.Path); os.IsNotExist(err) {
-		fmt.Println("Uploads directory not found at:", cfg.Uploads.Path)
+		shared.Msg("warning", "Uploads directory not found at:", cfg.Uploads.Path)
 
 		// ask user if they want to create the uploads directory
 		if shared.AskYesNo("Would you like to create the uploads directory now based on the config?") {
 			if err := setupUploadDirectory(cfg.Uploads.Path); err != nil {
-				fmt.Println("Error creating uploads directory:", err)
+				shared.Msg("error", "Error creating uploads directory:", err)
 				os.Exit(1)
 			}
 		} else {
-			fmt.Println("Uploads directory creation skipped. Please create it manually.")
+			shared.Msg("warning", "Uploads directory creation skipped. Please create it manually.")
 			os.Exit(1)
 		}
 
 		// since we had to create the config, setup is not already done
 		alreadyDone = false
 	} else {
-		fmt.Println("Uploads directory found.")
+		shared.Msg("success", "Uploads directory found")
 	}
 
 	// if everything was already setup and there was no need for intervention
 	if alreadyDone {
-		fmt.Println("Setup is already completed. No further action is required.")
+		shared.Msg("success", "Setup is already completed. No further action is required.")
 		return
 	}
 }
