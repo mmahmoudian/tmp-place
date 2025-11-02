@@ -3,7 +3,7 @@
 > [!WARNING]
 > This software is in very early stages. Read the code and contribute if you like, but this is definitely not ready in any shape or form to be deployed.
 
-The idea is to have a small project written in one language that can be used for upload/download files that live for short-term. Something generally akin to 0x0.st (https://git.0x0.st/mia/0x0) but with some modifications.
+The idea is to have a small project written in one language that can be used for upload/download files that live for short-term. Something generally akin to [0x0.st](https://git.0x0.st/mia/0x0) but with some modifications.
 
 I started this project as a way to learn Go, and also to scratch a personal itch. The 0x0.st is a great project, but has some parts that imho can be improved such as:
 1. Go is superior compared to python in terms of performance and also because it produces one single binary
@@ -146,23 +146,27 @@ For every file under the `cmd/`, there is a file with same name but suffixed wit
 --------------------------------------------------------------------------------
 
 ## ToDo
-- [x] implement file upload from the user
-- [x] generate 6 character file tag
-- [x] allow the user to specify the secret that should be provided during the download
 - [x] change to single app with subcommands
-- [ ] store the data in a sqlite database
-- [ ] implement file download
-- [ ] delete the file if it had the one-off flag
-- [ ] implement using the secret for file download
-- [ ] clean the files based on the TTL
 - [ ] implement proper logging
-- [ ] moderation tooling
-	- [ ] temporarily reject any uploads with a message
-	- [ ] virus scan
+- server
+	- [x] implement file upload from the user
+	- [x] generate 6 character file tag
+	- [x] allow the user to specify the secret that should be provided during the download
+	- [ ] store the data in a sqlite database
+	- [ ] implement file download
+	- [ ] implement using the secret for file download
+	- [ ] delete the file if it had the one-off flag
+	- [ ] virus scan (should be configurable in the config)
+- janitor
+	- [ ] clean the files based on the TTL
+	- [ ] log rotation
+- admin
+	- [ ] general statistics for the admin
+		- [ ] active TTLs
+		- [ ] active one-offs
+		- [ ] total file size
+		- [ ] total uploads in last minute, hour, day, week, month, year
+	- [ ] lock-down mode (temporarily reject any uploads with a message)
 	- [ ] IP blocking
 	- [ ] IP rate limit
-- [ ] general statistics for the admin
-	- [ ] active TTLs
-	- [ ] active one-offs
-	- [ ] total file size
-	- [ ] total uploads in last minute, hour, day, week, month, year
+
