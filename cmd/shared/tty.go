@@ -2,7 +2,7 @@ package shared
 
 import "os"
 
-// isPiped reports whether stdin is coming from a pipe or redirection
+// isStdinPiped reports whether stdin is coming from a pipe or redirection
 // rather than an interactive terminal.
 // It returns true when stdin is NOT a character device.
 func isStdinPiped() bool {

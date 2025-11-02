@@ -246,6 +246,19 @@ func SetupHandler(cmd *cobra.Command, args []string) {
 		shared.Msg("success", "Database file found")
 	}
 
+	// Check database schema
+	schemaMatch, err := CheckDatabaseSchema(cfg.Server.Database.DatabaseFile, "db_schema.sql")
+	if err != nil {
+		shared.Msg("error", "Database schema check failed:", err)
+		os.Exit(1)
+	}
+	if !schemaMatch {
+		shared.Msg("warning", "Database schema does not match project template schema")
+		// Could prompt user to migrate or recreate, but for now just warn
+	} else {
+		shared.Msg("success", "Database schema matches project template schema")
+	}
+
 	// check if upload directory exists
 	if _, err := os.Stat(cfg.Uploads.Path); os.IsNotExist(err) {
 		shared.Msg("warning", "Uploads directory not found at:", cfg.Uploads.Path)
