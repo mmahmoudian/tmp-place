@@ -97,6 +97,40 @@ wget 'http://domain.tld/n2eu0B?secret=VeryStringPassword'
 ```
 
 --------------------------------------------------------------------------------
+## Installation
+This project comes with setup wizard that guide you step-by-step to have get a `config.json` and database.
+You can [get the binary](#get-the-binary) or you can [build this project from source](#buiding-from-source) to get the binary file.
+
+When you got the binary file and the schema template file, just run the setup:
+
+```sh
+./tmp-place setup
+```
+
+### Get the binary
+You need two files that you can download:
+- [The binary file](https://github.com/mmahmoudian/tmp-place/releases/latest)
+- [The database schema template](https://raw.githubusercontent.com/mmahmoudian/tmp-place/refs/heads/main/db_schema.sql)
+
+### Buiding from source
+```sh
+# get the code
+git clone --depth 1 https://github.com/mmahmoudian/tmp-place.git
+
+# make sure you have Go installed. You can check by:
+go version
+
+# build the binary
+make build
+
+# move the file to where you want
+mv bin/tmp-place /the/path/of/your/choice/
+
+# copy the database schema
+cp db_schema.sql /the/path/of/your/choice/
+```
+
+--------------------------------------------------------------------------------
 
 ## Project structure
 This project will produce one binary file with four subcommands for each of the modules of this software:
