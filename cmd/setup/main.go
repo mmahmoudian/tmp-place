@@ -85,11 +85,11 @@ func setupConfigWizard() (shared.Config, error) {
 		defaultLogLevel    = "info"
 		defaultUploadsPath = "uploads"
 		// Defaults below are rough and can be adjusted later
-		defaultMaxSizeBytes int64 = 50 * 1024 * 1024 // 50 MB
-		defaultMaxTTL       int64 = 7 * 24 * 3600    // 7 days
+		defaultMaxSizeBytes int64 = 10 * 1024 * 1024 // 10 MB
+		defaultMaxTTL       int64 = 12 * 3600        // 12 hours
 	)
 
-	fmt.Println("Let's set up your configuration. Press Enter to accept defaults in [brackets].")
+	fmt.Println("\nLet's set up your configuration. Press Enter to accept defaults in [brackets].")
 
 	// Collect inputs
 	host, err := prompt("Server host", defaultHost)
@@ -124,7 +124,7 @@ func setupConfigWizard() (shared.Config, error) {
 		case "debug", "info", "warn", "error":
 			logLevel = llLower
 		default:
-			fmt.Println("Please choose one of: debug, info, warn, error.")
+			shared.Msg("red", "Please choose one of: debug, info, warn, error.")
 			continue
 		}
 		break
@@ -201,6 +201,8 @@ func SetupHandler(cmd *cobra.Command, args []string) {
 
 	// check if config.json exists
 	if _, err := os.Stat("config.json"); os.IsNotExist(err) {
+		shared.Msg("warning", "config file not found at:", "config.json")
+
 		// ask user in CLI if they want to create a config file
 		if !shared.AskYesNo("Would you like to go through the config creation wizard?") {
 			os.Exit(1)

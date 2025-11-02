@@ -192,6 +192,7 @@ func NormalizeSchema(schema string) string {
 }
 
 // CheckDatabaseSchema compares the database schema and the project template schema
+// Returns true if they match, false otherwise.
 func CheckDatabaseSchema(dbPath string, templateSchemaPath string) (bool, error) {
 	// get database schema
 	dbSchema, err := ExtractDatabaseSchema(dbPath)
