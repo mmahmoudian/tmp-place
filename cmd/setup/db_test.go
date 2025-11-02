@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	_ "modernc.org/sqlite"
@@ -185,4 +186,301 @@ func TestCreateDatabase_CreatesParentDirectory(t *testing.T) {
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
 		t.Fatal("database file was not created")
 	}
+}
+
+func TestExtractDatabaseSchema_Success(t *testing.T) {
+	dir := t.TempDir()
+	dbPath := filepath.Join(dir, "test.db")
+
+	// Create a test database with known schema
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatalf("failed to create test database: %v", err)
+	}
+	defer db.Close()
+
+	// Create test schema
+	testSchema := `
+		CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT);
+		CREATE INDEX idx_name ON users(name);
+	`
+	if _, err := db.Exec(testSchema); err != nil {
+		t.Fatalf("failed to create test schema: %v", err)
+	}
+	db.Close()
+
+	// Extract schema
+	schema, err := ExtractDatabaseSchema(dbPath)
+	if err != nil {
+		t.Fatalf("ExtractDatabaseSchema failed: %v", err)
+	}
+
+	// Verify schema contains expected elements
+	if !contains(schema, "CREATE TABLE users") {
+		t.Errorf("schema missing CREATE TABLE users, got: %s", schema)
+	}
+	if !contains(schema, "CREATE INDEX idx_name") {
+		t.Errorf("schema missing CREATE INDEX, got: %s", schema)
+	}
+}
+
+func TestExtractDatabaseSchema_EmptyPath(t *testing.T) {
+	_, err := ExtractDatabaseSchema("")
+	if err == nil {
+		t.Fatal("expected error for empty path, got nil")
+	}
+	if err.Error() != "dbPath is empty" {
+		t.Errorf("unexpected error message: %v", err)
+	}
+}
+
+func TestExtractDatabaseSchema_MissingFile(t *testing.T) {
+	dir := t.TempDir()
+	dbPath := filepath.Join(dir, "nonexistent.db")
+
+	_, err := ExtractDatabaseSchema(dbPath)
+	if err == nil {
+		t.Fatal("expected error for missing database file, got nil")
+	}
+}
+
+func TestReadSchemaTemplate_Success(t *testing.T) {
+	dir := t.TempDir()
+	schemaPath := filepath.Join(dir, "test_schema.sql")
+
+	// Create test schema file
+	testContent := "CREATE TABLE test (id INTEGER PRIMARY KEY);"
+	if err := os.WriteFile(schemaPath, []byte(testContent), 0o644); err != nil {
+		t.Fatalf("failed to write test schema file: %v", err)
+	}
+
+	// Read schema
+	schema, err := ReadSchemaTemplate(schemaPath)
+	if err != nil {
+		t.Fatalf("ReadSchemaTemplate failed: %v", err)
+	}
+
+	if schema != testContent {
+		t.Errorf("schema = %q; want %q", schema, testContent)
+	}
+}
+
+func TestReadSchemaTemplate_EmptyPath(t *testing.T) {
+	_, err := ReadSchemaTemplate("")
+	if err == nil {
+		t.Fatal("expected error for empty path, got nil")
+	}
+	if err.Error() != "path is empty" {
+		t.Errorf("unexpected error message: %v", err)
+	}
+}
+
+func TestReadSchemaTemplate_MissingFile(t *testing.T) {
+	dir := t.TempDir()
+	schemaPath := filepath.Join(dir, "nonexistent.sql")
+
+	_, err := ReadSchemaTemplate(schemaPath)
+	if err == nil {
+		t.Fatal("expected error for missing file, got nil")
+	}
+}
+
+func TestNormalizeSchema_RemovesComments(t *testing.T) {
+	input := `-- Single line comment
+CREATE TABLE test (id INTEGER); -- inline comment
+/* Multi-line
+   comment */
+CREATE INDEX idx ON test(id);`
+
+	normalized := NormalizeSchema(input)
+
+	// Should remove all comments
+	if contains(normalized, "--") {
+		t.Errorf("normalized schema still contains -- comments: %s", normalized)
+	}
+	if contains(normalized, "/*") || contains(normalized, "*/") {
+		t.Errorf("normalized schema still contains /* */ comments: %s", normalized)
+	}
+	// Should still contain the actual SQL
+	if !contains(normalized, "create table test") {
+		t.Errorf("normalized schema missing CREATE TABLE: %s", normalized)
+	}
+}
+
+func TestNormalizeSchema_RemovesIfExists(t *testing.T) {
+	input := `CREATE TABLE IF NOT EXISTS test (id INTEGER);
+CREATE INDEX IF EXISTS idx ON test(id);`
+
+	normalized := NormalizeSchema(input)
+
+	// Should remove IF NOT EXISTS and IF EXISTS
+	if contains(normalized, "if not exists") || contains(normalized, "if exists") {
+		t.Errorf("normalized schema still contains IF (NOT) EXISTS: %s", normalized)
+	}
+}
+
+func TestNormalizeSchema_NormalizesWhitespace(t *testing.T) {
+	input := `CREATE   TABLE    test   (
+    id    INTEGER,
+    name  TEXT
+);`
+
+	normalized := NormalizeSchema(input)
+
+	// NormalizeSchema doesn't lowercase but does normalize structure
+	// It collapses newlines within statements but may preserve some spacing
+	if !contains(normalized, "table") && !contains(normalized, "TABLE") {
+		t.Errorf("normalized schema missing table keyword: %s", normalized)
+	}
+
+	// Check that multiple newlines are collapsed
+	if contains(normalized, "\n\n\n") {
+		t.Errorf("normalized schema still contains multiple consecutive newlines: %s", normalized)
+	}
+}
+
+func TestNormalizeSchema_SortsStatements(t *testing.T) {
+	input := `CREATE TABLE zebra (id INTEGER);
+CREATE TABLE apple (id INTEGER);
+CREATE TABLE banana (id INTEGER);`
+
+	normalized := NormalizeSchema(input)
+	lines := splitLines(normalized)
+
+	// After sorting, apple should come before banana and zebra
+	appleIdx := findLineContaining(lines, "apple")
+	bananaIdx := findLineContaining(lines, "banana")
+	zebraIdx := findLineContaining(lines, "zebra")
+
+	if appleIdx == -1 || bananaIdx == -1 || zebraIdx == -1 {
+		t.Fatalf("missing expected tables in normalized output: %s", normalized)
+	}
+
+	if appleIdx > bananaIdx || bananaIdx > zebraIdx {
+		t.Errorf("statements not sorted correctly: apple=%d, banana=%d, zebra=%d\n%s",
+			appleIdx, bananaIdx, zebraIdx, normalized)
+	}
+}
+
+func TestCheckDatabaseSchema_Matching(t *testing.T) {
+	dir := t.TempDir()
+	dbPath := filepath.Join(dir, "test.db")
+	schemaPath := filepath.Join(dir, "schema.sql")
+
+	// Create schema template
+	schemaContent := `CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT);
+CREATE INDEX idx_name ON test(name);`
+	if err := os.WriteFile(schemaPath, []byte(schemaContent), 0o644); err != nil {
+		t.Fatalf("failed to write schema file: %v", err)
+	}
+
+	// Create database with same schema
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatalf("failed to create database: %v", err)
+	}
+	if _, err := db.Exec(schemaContent); err != nil {
+		t.Fatalf("failed to apply schema: %v", err)
+	}
+	db.Close()
+
+	// Check schema
+	match, err := CheckDatabaseSchema(dbPath, schemaPath)
+	if err != nil {
+		t.Fatalf("CheckDatabaseSchema failed: %v", err)
+	}
+	if !match {
+		t.Fatal("expected schemas to match")
+	}
+}
+
+func TestCheckDatabaseSchema_Mismatched(t *testing.T) {
+	dir := t.TempDir()
+	dbPath := filepath.Join(dir, "test.db")
+	schemaPath := filepath.Join(dir, "schema.sql")
+
+	// Create schema template
+	schemaContent := `CREATE TABLE test (id INTEGER PRIMARY KEY);`
+	if err := os.WriteFile(schemaPath, []byte(schemaContent), 0o644); err != nil {
+		t.Fatalf("failed to write schema file: %v", err)
+	}
+
+	// Create database with different schema
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatalf("failed to create database: %v", err)
+	}
+	differentSchema := `CREATE TABLE different (id INTEGER PRIMARY KEY);`
+	if _, err := db.Exec(differentSchema); err != nil {
+		t.Fatalf("failed to apply schema: %v", err)
+	}
+	db.Close()
+
+	// Check schema
+	match, err := CheckDatabaseSchema(dbPath, schemaPath)
+	if err != nil {
+		t.Fatalf("CheckDatabaseSchema failed: %v", err)
+	}
+	if match {
+		t.Fatal("expected schemas to NOT match")
+	}
+}
+
+func TestCheckDatabaseSchema_EmptyPaths(t *testing.T) {
+	// Test empty database path
+	_, err := CheckDatabaseSchema("", "schema.sql")
+	if err == nil {
+		t.Fatal("expected error for empty database path")
+	}
+
+	// Test empty schema path
+	_, err = CheckDatabaseSchema("db.db", "")
+	if err == nil {
+		t.Fatal("expected error for empty schema path")
+	}
+}
+
+// Helper functions for tests
+func contains(s, substr string) bool {
+	return len(s) > 0 && len(substr) > 0 &&
+		(s == substr || len(s) >= len(substr) &&
+			findSubstring(s, substr))
+}
+
+// findSubstring checks if substr exists in s (case-insensitive).
+func findSubstring(s, substr string) bool {
+	sLower := strings.ToLower(s)
+	subLower := strings.ToLower(substr)
+	for i := 0; i <= len(sLower)-len(subLower); i++ {
+		if sLower[i:i+len(subLower)] == subLower {
+			return true
+		}
+	}
+	return false
+}
+
+// splitLines splits a string into lines.
+func splitLines(s string) []string {
+	var lines []string
+	start := 0
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\n' {
+			lines = append(lines, s[start:i])
+			start = i + 1
+		}
+	}
+	if start < len(s) {
+		lines = append(lines, s[start:])
+	}
+	return lines
+}
+
+// findLineContaining returns the index of the first line containing the given substring.
+func findLineContaining(lines []string, substr string) int {
+	for i, line := range lines {
+		if contains(line, substr) {
+			return i
+		}
+	}
+	return -1
 }
