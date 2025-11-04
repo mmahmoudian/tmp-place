@@ -1,17 +1,17 @@
 {
-  "server":{
+  "server": {
     "host": "localhost",
     "port": 8080,
     "database": {
-      "database_file": "./tmp_place.db"
+      "database_file": "tmp-place.db"
     },
     "logging": {
-      "log_file": "./tmp_place.log",
+      "log_file": "server.log",
       "log_level": "info"
     }
   },
   "uploads": {
-    "path": "./uploads",
+    "path": "uploads",
     "max_file_size": 10485760,
     "max_ttl_seconds": 43200
   }

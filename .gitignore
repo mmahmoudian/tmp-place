@@ -32,7 +32,9 @@ go.work.sum
 
 # Editor/IDE
 # .idea/
-# .vscode/
+.vscode/
 
 # project specific ignores
 uploads/
+tmp-place.db
+
