@@ -1,6 +1,8 @@
 package server
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -45,8 +47,7 @@ func SanitizeInput(input string) string {
 // Returns the prepared secret string.
 func PrepareSecret(secret string) string {
 	sanitized := SanitizeInput(secret)
-	if len(sanitized) > 42 {
-		sanitized = sanitized[:42]
-	}
-	return sanitized
+	// calculate sha256 hash of the secret
+	hash := sha256.Sum256([]byte(sanitized))
+	return fmt.Sprintf("%x", hash)
 }
