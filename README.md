@@ -152,10 +152,14 @@ For every file under the `cmd/`, there is a file with same name but suffixed wit
 	- [x] implement file upload from the user
 	- [x] generate 6 character file tag
 	- [x] allow the user to specify the secret that should be provided during the download
-	- [ ] store the data in a sqlite database
+	- [x] store the data in a sqlite database
 	- [ ] implement file download
 	- [ ] implement using the secret for file download
 	- [ ] delete the file if it had the one-off flag
+	- [ ] IP blocking
+		- There will be a file called `ip-list`. It will contain some regex that will be applied on the connections. In the config, the user defines if the `ip-list` patterns should be treated as white list or blacklist. This is to make things simple
+	- [ ] IP rate limit
+		- admin should configure how many seconds should be between every upload/download request
 	- [ ] virus scan (should be configurable in the config)
 - janitor
 	- [ ] clean the files based on the TTL
@@ -167,6 +171,9 @@ For every file under the `cmd/`, there is a file with same name but suffixed wit
 		- [ ] total file size
 		- [ ] total uploads in last minute, hour, day, week, month, year
 	- [ ] lock-down mode (temporarily reject any uploads with a message)
-	- [ ] IP blocking
-	- [ ] IP rate limit
+	- user management (if admin have enabled user authentication in config)
+		- [ ] adding user
+		- [ ] suspending user
+		- [ ] deleting user
+
 
