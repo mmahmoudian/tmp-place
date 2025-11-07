@@ -176,4 +176,18 @@ For every file under the `cmd/`, there is a file with same name but suffixed wit
 		- [ ] suspending user
 		- [ ] deleting user
 
+--------------------------------------------------------------------------------
+
+## Projects with somewhat similar functionality
+
+- supporting curl:
+	- [0x0 (a.k.a. Null Pointer)](https://git.0x0.st/mia/0x0)
+	- [transfer.sh](https://github.com/dutchcoders/transfer.sh)
+	- [paste.rs](https://github.com/sergiobenitez/rktpb)
+	- [up.x1b.dev](https://git.x1b.dev/todor/upload)
+- others
+	- [fiche](https://github.com/solusipse/fiche)
+	- [Uguu](https://github.com/nokonoko/uguu)
+
+There is an old but still mainly valid listing as well: https://paste.sh/alts
 
