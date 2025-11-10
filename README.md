@@ -33,7 +33,7 @@ I started this project as a way to learn Go, and also to scratch a personal itch
 	- max upload size (default 10)
 - the user should be able to configure through curl command arguments:
 	- `-F 'ttl=10m'`: the time to live. I.e., how long the file should stay on the server before getting cleaned. This cannot be longer than the TTL admin has defined.
-	- `-F 'secret'`: The password that should be provided in the download command, either by curl or by adding `?secret=`.
+	- `-F 'secret'`: The password that should be provided in the download command, either by curl or by adding `?secret=` to the end of the URL.
 	- `-Foneoff`: This is boolean, indicating that the file is wiped after the first download
 
 --------------------------------------------------------------------------------

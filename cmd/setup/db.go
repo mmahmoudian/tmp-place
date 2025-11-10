@@ -7,9 +7,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/mmahmoudian/tmp-place/cmd/shared"
 
 	_ "modernc.org/sqlite"
 )
@@ -131,66 +132,6 @@ func ExtractDatabaseSchema(dbPath string) (string, error) {
 	return strings.Join(out, "\n\n"), nil
 }
 
-// ReadSchemaTemplate reads the SQL schema from a file and returns it as a string.
-// Trims leading/trailing whitespace but otherwise preserves the file contents.
-// Returns the schema as a string.
-func ReadSchemaTemplate(path string) (string, error) {
-	if strings.TrimSpace(path) == "" {
-		return "", errors.New("path is empty")
-	}
-
-	// Check if database file exists
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return "", fmt.Errorf("database schema template file does not exist: %s", path)
-	}
-
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-
-	return strings.TrimSpace(string(data)), nil
-}
-
-// NormalizeSchema removes comments, extra whitespace, and normalizes SQL for comparison.
-// Returns the normalized schema string.
-func NormalizeSchema(schema string) string {
-	// Remove SQL comments (-- style)
-	re := regexp.MustCompile(`--[^\n]*`)
-	schema = re.ReplaceAllString(schema, "")
-
-	// Remove multi-line comments (/* ... */)
-	re = regexp.MustCompile(`(?s)/\*.*?\*/`)
-	schema = re.ReplaceAllString(schema, "")
-
-	// Remove IF NOT EXISTS / IF EXISTS variations for comparison
-	re = regexp.MustCompile(`(?i)\s+if\s+(not\s+)?exists\s+`)
-	schema = re.ReplaceAllString(schema, " ")
-
-	// remove the newlines for indented sections
-	re = regexp.MustCompile(`\n\s+`)
-	schema = re.ReplaceAllString(schema, " ")
-
-	// remove newlines before closing parentheses of each sql statement
-	re = regexp.MustCompile(`\n\s*\)`)
-	schema = re.ReplaceAllString(schema, " )")
-
-	// collapse multiple newlines to single space
-	re = regexp.MustCompile(`\n+`)
-	schema = re.ReplaceAllString(schema, "\n")
-
-	// ensure each statement ends with a newline after semicolon
-	re = regexp.MustCompile(`;\s+`)
-	schema = re.ReplaceAllString(schema, ";\n")
-
-	// Trim and convert to lowercase for case-insensitive comparison
-	schema = strings.TrimSpace(schema)
-
-	lines := strings.Split(schema, "\n")
-	sort.Strings(lines)
-	return strings.Join(lines, "\n")
-}
-
 // CheckDatabaseSchema compares the database schema and the project template schema
 // Returns true if they match, false otherwise.
 func CheckDatabaseSchema(dbPath string, templateSchemaPath string) (bool, error) {
@@ -201,14 +142,14 @@ func CheckDatabaseSchema(dbPath string, templateSchemaPath string) (bool, error)
 	}
 
 	// get template schema
-	templateSchema, err := ReadSchemaTemplate(templateSchemaPath)
+	templateSchema, err := shared.ReadSchemaTemplate(templateSchemaPath)
 	if err != nil {
 		return false, err
 	}
 
 	// Normalize both schemas for comparison
-	dbSchema = NormalizeSchema(dbSchema)
-	templateSchema = NormalizeSchema(templateSchema)
+	dbSchema = shared.NormalizeSchema(dbSchema)
+	templateSchema = shared.NormalizeSchema(templateSchema)
 
 	// Compare the normalized schemas
 	return dbSchema == templateSchema, nil
